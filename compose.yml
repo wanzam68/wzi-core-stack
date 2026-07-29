@@ -1,0 +1,6 @@
+name: wzi-core
+
+include:
+  - compose.core.yml
+  - compose.apps.yml
+  - compose.proxy.yml

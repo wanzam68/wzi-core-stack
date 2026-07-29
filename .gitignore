@@ -1,0 +1,40 @@
+# Secrets
+.env
+.env.*
+
+# Runtime data
+postgres/data/
+redis/data/
+n8n/data/
+
+# Caddy runtime
+proxy/data/
+proxy/config-data/
+proxy/logs/
+
+# Backups
+backups/
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db.env
+*.env
+postgres/data/
+redis/data/
+n8n/data/
+proxy/data/
+backups/
+logs/
+*.log
+# Migration and temporary backups
+config-backups/
+docker-compose.postgres-only.yml

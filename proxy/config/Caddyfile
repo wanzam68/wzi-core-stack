@@ -1,0 +1,18 @@
+{
+    email {$ACME_EMAIL}
+}
+
+n8n.wzisaas.com {
+    encode zstd gzip
+
+    reverse_proxy n8n:5678
+
+    log {
+        output file /var/log/caddy/n8n-access.log {
+            roll_size 10MiB
+            roll_keep 10
+            roll_keep_for 720h
+        }
+        format json
+    }
+}

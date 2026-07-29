@@ -1,0 +1,31 @@
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: wzi-caddy
+    restart: unless-stopped
+
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL}
+
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+
+    volumes:
+      - ./proxy/config/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./proxy/data:/data
+      - ./proxy/config-data:/config
+      - ./proxy/logs:/var/log/caddy
+
+    networks:
+      - wzi_frontend
+
+    depends_on:
+      n8n:
+        condition: service_healthy
+
+networks:
+  wzi_frontend:
+    external: true
+    name: wzi_frontend

@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd /opt/wzi/core-stack
+
+exec docker compose \
+  -p wzi-core \
+  --env-file .env \
+  -f compose.core.yml \
+  -f compose.apps.yml \
+  -f compose.proxy.yml \
+  "$@"
