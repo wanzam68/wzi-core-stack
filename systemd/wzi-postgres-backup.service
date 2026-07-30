@@ -1,0 +1,10 @@
+[Unit]
+Description=WZI PostgreSQL database backup
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=wziadmin
+Group=wziadmin
+ExecStart=/opt/wzi/scripts/postgres-backup.sh
