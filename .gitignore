@@ -38,3 +38,7 @@ logs/
 # Migration and temporary backups
 config-backups/
 docker-compose.postgres-only.yml
+
+# Monitoring runtime data
+monitoring/logs/
+monitoring/state/
