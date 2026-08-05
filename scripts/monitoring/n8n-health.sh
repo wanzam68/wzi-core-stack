@@ -89,3 +89,78 @@ log_message "$RESULT" \
 "n8n monitor completed; warnings=$WARNINGS failures=$FAILED"
 
 exit "$EXIT_CODE"
+#!/bin/bash
+
+# ==========================================================
+# WZI Core Stack v1.3.0
+# n8n Health Monitor
+# ==========================================================
+
+set -e
+
+LOG_DIR="/opt/wzi/core-stack/logs"
+LOG_FILE="${LOG_DIR}/monitoring.log"
+
+mkdir -p "$LOG_DIR"
+
+SERVICE="n8n"
+
+timestamp() {
+    date '+%Y-%m-%d %H:%M:%S'
+}
+
+log() {
+    echo "$(timestamp) [$SERVICE] $1" | tee -a "$LOG_FILE"
+}
+
+# ----------------------------------------------------------
+# Check container
+# ----------------------------------------------------------
+
+if ! docker ps --format '{{.Names}}' | grep -q '^wzi-n8n$'; then
+    log "CRITICAL : Container not running"
+    exit 2
+fi
+
+STATUS=$(docker inspect \
+    --format='{{.State.Status}}' \
+    wzi-n8n)
+
+HEALTH=$(docker inspect \
+    --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \
+    wzi-n8n)
+
+RESTARTS=$(docker inspect \
+    --format='{{.RestartCount}}' \
+    wzi-n8n)
+
+log "Container Status : $STATUS"
+log "Health          : $HEALTH"
+log "Restart Count   : $RESTARTS"
+
+# ----------------------------------------------------------
+# Check HTTP Endpoint
+# ----------------------------------------------------------
+
+HTTP_CODE=$(curl \
+    -o /dev/null \
+    -s \
+    -w "%{http_code}" \
+    http://127.0.0.1:5678)
+
+RESPONSE_TIME=$(curl \
+    -o /dev/null \
+    -s \
+    -w "%{time_total}" \
+    http://127.0.0.1:5678)
+
+if [ "$HTTP_CODE" = "200" ]; then
+    log "HTTP Status     : OK ($HTTP_CODE)"
+    log "Response Time   : ${RESPONSE_TIME}s"
+    log "RESULT          : HEALTHY"
+    exit 0
+else
+    log "HTTP Status     : $HTTP_CODE"
+    log "RESULT          : CRITICAL"
+    exit 2
+fi
