@@ -42,3 +42,5 @@ docker-compose.postgres-only.yml
 # Monitoring runtime data
 monitoring/logs/
 monitoring/state/
+
+.env
