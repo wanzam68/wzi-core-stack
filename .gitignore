@@ -44,3 +44,7 @@ monitoring/logs/
 monitoring/state/
 
 .env
+
+# Local monitoring safety copies
+scripts/monitoring/*.pre-telegram
+scripts/monitoring-pre-refactor-*/
