@@ -1,0 +1,11 @@
+.git
+.gitignore
+docs
+storage
+config
+services
+templates
+README.md
+*.log
+*.tmp
+*.bak
