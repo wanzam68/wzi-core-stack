@@ -1,0 +1,11 @@
+[Unit]
+Description=Run WZI Telemetry Retention Daily
+
+[Timer]
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+AccuracySec=5m
+Unit=wzi-telemetry-retention.service
+
+[Install]
+WantedBy=timers.target

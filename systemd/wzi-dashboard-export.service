@@ -1,0 +1,10 @@
+[Unit]
+Description=WZI Dashboard Live Telemetry Exporter
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=wziadmin
+WorkingDirectory=/opt/wzi/core-stack
+ExecStart=/opt/wzi/core-stack/scripts/monitoring/dashboard-export.sh

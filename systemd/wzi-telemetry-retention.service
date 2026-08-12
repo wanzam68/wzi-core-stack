@@ -1,0 +1,10 @@
+[Unit]
+Description=WZI Historical Telemetry Retention
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=wziadmin
+WorkingDirectory=/opt/wzi/core-stack
+ExecStart=/opt/wzi/core-stack/scripts/monitoring/telemetry-retention.sh --apply

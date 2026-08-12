@@ -41,8 +41,10 @@ MONITORS=(
     "Redis|redis-health.sh"
     "n8n|n8n-health.sh"
     "Caddy|caddy-health.sh"
+    "Dashboard|dashboard-health.sh"
     "Host Resources|system-health.sh"
     "PostgreSQL Backup|backup-health.sh"
+    "Telemetry Growth|telemetry-growth.sh"
     "SSL Certificate|ssl-health.sh"
 )
 
@@ -131,7 +133,7 @@ join_array_lines() {
 
 print_header() {
     echo "============================================================"
-    echo "WZI Core Stack v1.4.0 - Consolidated Health Monitor"
+    echo "WZI Core Stack v1.5.0 - Consolidated Health Monitor"
     echo "============================================================"
     echo "Timestamp : $(wzi_timestamp)"
     echo "Host      : $(hostname)"

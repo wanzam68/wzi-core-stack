@@ -1,0 +1,10 @@
+[Unit]
+Description=WZI Historical Dashboard Exporter
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=wziadmin
+WorkingDirectory=/opt/wzi/core-stack
+ExecStart=/opt/wzi/core-stack/scripts/monitoring/historical-export.sh

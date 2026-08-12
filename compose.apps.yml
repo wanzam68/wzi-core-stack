@@ -65,7 +65,8 @@ services:
 
     ports:
       - "127.0.0.1:8088:80"
-
+    volumes:
+      - ./dashboard/storage/live:/var/www/dashboard-data:ro
     networks:
       - wzi_frontend
 

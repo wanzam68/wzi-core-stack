@@ -1,0 +1,12 @@
+[Unit]
+Description=Run WZI Dashboard Telemetry Exporter Every Minute
+
+[Timer]
+OnBootSec=30s
+OnUnitActiveSec=60s
+AccuracySec=5s
+Persistent=true
+Unit=wzi-dashboard-export.service
+
+[Install]
+WantedBy=timers.target

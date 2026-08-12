@@ -67,6 +67,7 @@ function e(string $value): string
             <a class="active" href="#overview">Overview</a>
             <a href="#services">Services</a>
             <a href="#resources">Host Resources</a>
+            <a href="#trends">Historical Trends</a>
             <a href="#backup">Backup</a>
             <a href="#ssl">SSL Certificate</a>
             <a href="#alerts">Alerts</a>
@@ -102,26 +103,26 @@ function e(string $value): string
 
                 <article class="kpi-card">
                     <span>Infrastructure</span>
-                    <strong class="text-healthy">HEALTHY</strong>
-                    <small>8 / 8 monitors operational</small>
+                    <strong id="kpi-infrastructure" class="text-healthy">HEALTHY</strong>
+                    <small id="kpi-infrastructure-detail">Loading live status...</small>
                 </article>
 
                 <article class="kpi-card">
                     <span>Availability</span>
-                    <strong>100%</strong>
-                    <small>Current monitoring window</small>
+                    <strong id="kpi-availability">LIVE</strong>
+                    <small id="kpi-last-refresh">Waiting for telemetry...</small>
                 </article>
 
                 <article class="kpi-card">
                     <span>Backup</span>
-                    <strong class="text-healthy">CURRENT</strong>
-                    <small>PostgreSQL protection active</small>
+                    <strong id="kpi-backup" class="text-healthy">CURRENT</strong>
+                    <small id="kpi-backup-detail">Loading backup status...</small>
                 </article>
 
                 <article class="kpi-card">
                     <span>SSL</span>
-                    <strong class="text-healthy">VALID</strong>
-                    <small>TLS certificate monitored</small>
+                    <strong id="kpi-ssl" class="text-healthy">VALID</strong>
+                    <small id="kpi-ssl-detail">Loading certificate status...</small>
                 </article>
 
                 <article class="kpi-card">
@@ -132,8 +133,8 @@ function e(string $value): string
 
                 <article class="kpi-card">
                     <span>Current Release</span>
-                    <strong><?= e($dashboard['release']) ?></strong>
-                    <small>Dashboard development</small>
+                    <strong id="kpi-release"><?= e($dashboard['release']) ?></strong>
+                    <small id="kpi-release-detail">Dashboard development</small>
                 </article>
 
             </div>
@@ -159,7 +160,7 @@ function e(string $value): string
 
                 <?php foreach ($services as $service): ?>
 
-                    <article class="service-card">
+                    <article class="service-card" data-service="<?= e(strtolower($service['name'])) ?>">
 
                         <div class="service-icon">
                             <?= e(substr($service['name'], 0, 1)) ?>
@@ -172,7 +173,7 @@ function e(string $value): string
 
                         <span class="service-status">
                             <span class="status-dot healthy"></span>
-                            <?= e($service['status']) ?>
+                            <span class="service-status-text"><?= e($service['status']) ?></span>
                         </span>
 
                     </article>
@@ -198,42 +199,42 @@ function e(string $value): string
                 <div class="metric">
                     <div>
                         <span>CPU</span>
-                        <strong>18%</strong>
+                        <strong id="metric-cpu">--%</strong>
                     </div>
                     <div class="progress">
-                        <span style="width:18%"></span>
+                        <span id="bar-cpu" style="width:0%"></span>
                     </div>
                 </div>
 
                 <div class="metric">
                     <div>
                         <span>Memory</span>
-                        <strong>42%</strong>
+                        <strong id="metric-memory">--%</strong>
                     </div>
                     <div class="progress">
-                        <span style="width:42%"></span>
+                        <span id="bar-memory" style="width:0%"></span>
                     </div>
                 </div>
 
                 <div class="metric">
                     <div>
                         <span>Disk</span>
-                        <strong>31%</strong>
+                        <strong id="metric-disk">--%</strong>
                     </div>
                     <div class="progress">
-                        <span style="width:31%"></span>
+                        <span id="bar-disk" style="width:0%"></span>
                     </div>
                 </div>
 
                 <div class="mini-grid">
                     <div>
                         <span>Load Average</span>
-                        <strong>0.34</strong>
+                        <strong id="metric-load">--</strong>
                     </div>
 
                     <div>
                         <span>Uptime</span>
-                        <strong>5 days</strong>
+                        <strong id="metric-uptime">--</strong>
                     </div>
                 </div>
 
@@ -257,17 +258,17 @@ function e(string $value): string
 
                     <div>
                         <span>Latest Backup</span>
-                        <strong>Available</strong>
+                        <strong id="backup-latest">--</strong>
                     </div>
 
                     <div>
                         <span>Backup Age</span>
-                        <strong>Within Policy</strong>
+                        <strong id="backup-age">--</strong>
                     </div>
 
                     <div>
-                        <span>Verification</span>
-                        <strong class="text-healthy">PASSED</strong>
+                        <span>Status</span>
+                        <strong id="backup-status" class="text-healthy">--</strong>
                     </div>
 
                     <div>
@@ -301,22 +302,22 @@ function e(string $value): string
 
                     <div>
                         <span>Endpoint</span>
-                        <strong>n8n.wzisaas.com</strong>
+                        <strong id="ssl-hostname">--</strong>
                     </div>
 
                     <div>
-                        <span>Issuer</span>
-                        <strong>Let's Encrypt</strong>
+                        <span>Days Remaining</span>
+                        <strong id="ssl-days">--</strong>
                     </div>
 
                     <div>
-                        <span>Renewal</span>
-                        <strong>Automatic</strong>
+                        <span>Expiry</span>
+                        <strong id="ssl-expiry">--</strong>
                     </div>
 
                     <div>
-                        <span>Monitoring</span>
-                        <strong class="text-healthy">ACTIVE</strong>
+                        <span>Status</span>
+                        <strong id="ssl-status" class="text-healthy">--</strong>
                     </div>
 
                 </div>
@@ -366,7 +367,148 @@ function e(string $value): string
         </div>
 
 
-        <section id="operations" class="panel">
+
+        <section id="trends" class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <span class="eyebrow">Historical Telemetry</span>
+                    <h2>24-Hour Infrastructure Trends</h2>
+                </div>
+
+                <div class="trend-header-meta">
+                    <span id="history-range" class="badge badge-readonly">
+                        24H
+                    </span>
+
+                    <span id="history-generated" class="last-update">
+                        Loading history...
+                    </span>
+                </div>
+            </div>
+
+            <div class="historical-kpi-grid">
+
+                <article class="history-stat">
+                    <span>Availability</span>
+                    <strong id="history-availability">--%</strong>
+                    <small>Non-critical historical buckets</small>
+                </article>
+
+                <article class="history-stat">
+                    <span>Peak CPU</span>
+                    <strong id="history-cpu-max">--%</strong>
+                    <small id="history-cpu-avg">Average --%</small>
+                </article>
+
+                <article class="history-stat">
+                    <span>Peak Memory</span>
+                    <strong id="history-memory-max">--%</strong>
+                    <small id="history-memory-avg">Average --%</small>
+                </article>
+
+                <article class="history-stat">
+                    <span>Peak Load</span>
+                    <strong id="history-load-max">--</strong>
+                    <small>1-minute load average</small>
+                </article>
+
+                <article class="history-stat">
+                    <span>Backup Max Age</span>
+                    <strong id="history-backup-max">-- h</strong>
+                    <small id="history-backup-status">Status --</small>
+                </article>
+
+                <article class="history-stat">
+                    <span>SSL Minimum</span>
+                    <strong id="history-ssl-min">-- days</strong>
+                    <small id="history-ssl-status">Status --</small>
+                </article>
+
+            </div>
+
+            <div class="chart-grid">
+
+                <article class="chart-panel">
+                    <div class="chart-heading">
+                        <div>
+                            <span class="chart-label">Resources</span>
+                            <h3>CPU, Memory & Disk</h3>
+                        </div>
+                        <span class="chart-unit">Percent</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas
+                            id="resource-trend-chart"
+                            aria-label="CPU memory and disk utilization over time"
+                            role="img"></canvas>
+                    </div>
+                </article>
+
+                <article class="chart-panel">
+                    <div class="chart-heading">
+                        <div>
+                            <span class="chart-label">Performance</span>
+                            <h3>Load Average</h3>
+                        </div>
+                        <span class="chart-unit">Load 1</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas
+                            id="load-trend-chart"
+                            aria-label="Server load average over time"
+                            role="img"></canvas>
+                    </div>
+                </article>
+
+                <article class="chart-panel">
+                    <div class="chart-heading">
+                        <div>
+                            <span class="chart-label">Data Protection</span>
+                            <h3>Backup Age</h3>
+                        </div>
+                        <span class="chart-unit">Hours</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas
+                            id="backup-trend-chart"
+                            aria-label="PostgreSQL backup age over time"
+                            role="img"></canvas>
+                    </div>
+                </article>
+
+                <article class="chart-panel">
+                    <div class="chart-heading">
+                        <div>
+                            <span class="chart-label">Certificate</span>
+                            <h3>SSL Validity</h3>
+                        </div>
+                        <span class="chart-unit">Days Remaining</span>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas
+                            id="ssl-trend-chart"
+                            aria-label="SSL certificate days remaining over time"
+                            role="img"></canvas>
+                    </div>
+                </article>
+
+            </div>
+
+            <p id="history-message"
+               class="security-note"
+               aria-live="polite">
+                Historical telemetry is loading.
+            </p>
+
+        </section>
+
+
+<section id="operations" class="panel">
 
             <div class="panel-header">
                 <div>
@@ -420,17 +562,17 @@ function e(string $value): string
 
                 <div>
                     <span>Release</span>
-                    <strong>v1.5.0</strong>
+                    <strong id="release-version">v1.5.0</strong>
                 </div>
 
                 <div>
                     <span>Branch</span>
-                    <strong>release/v1.5.0</strong>
+                    <strong id="release-branch">release/v1.5.0</strong>
                 </div>
 
                 <div>
                     <span>Baseline</span>
-                    <strong>v1.4.0</strong>
+                    <strong id="release-commit">--</strong>
                 </div>
 
                 <div>
@@ -452,6 +594,7 @@ function e(string $value): string
 
 </div>
 
+<script src="assets/vendor/chartjs/chart.umd.min.js"></script>
 <script src="assets/js/wzi-dashboard.js"></script>
 
 </body>

@@ -51,3 +51,6 @@ scripts/monitoring-pre-refactor-*/
 compose.apps.yml.pre-dashboard-*
 dashboard/storage/*
 !dashboard/storage/.gitkeep
+scripts/monitoring/*.pre-atomic
+scripts/monitoring/*.pre-history
+dashboard/public/*.pre-5f-e

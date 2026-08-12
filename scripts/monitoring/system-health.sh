@@ -203,12 +203,12 @@ LOAD_CRITICAL="$(
 
 LOAD_RESULT="$(
     awk \
-        -v load="$LOAD_1" \
+        -v current_load="$LOAD_1" \
         -v warning="$LOAD_WARNING" \
         -v critical="$LOAD_CRITICAL" \
         'BEGIN {
-            if (load >= critical) print 2;
-            else if (load >= warning) print 1;
+            if (current_load >= critical) print 2;
+            else if (current_load >= warning) print 1;
             else print 0;
         }'
 )"
