@@ -596,3 +596,155 @@ footer {
         height: 230px;
     }
 }
+
+/* ==========================================================
+   WZI v1.6.0 Milestone 6C
+   Operational Intelligence - DEV-2.4D temporary candidate
+   ========================================================== */
+
+.wzi-intelligence-section {
+    margin-top: 2rem;
+    padding: 1.25rem;
+    border: 1px solid rgba(127, 127, 127, 0.25);
+    border-radius: 0.75rem;
+}
+
+.wzi-intelligence-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.wzi-intelligence-eyebrow {
+    margin: 0 0 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.wzi-intelligence-message {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    background: rgba(127, 127, 127, 0.10);
+}
+
+.wzi-intelligence-message[data-state="ERROR"] {
+    border: 1px solid currentColor;
+    font-weight: 600;
+}
+
+.wzi-intelligence-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.wzi-intelligence-card {
+    min-width: 0;
+    padding: 1rem;
+    border: 1px solid rgba(127, 127, 127, 0.20);
+    border-radius: 0.65rem;
+}
+
+.wzi-intelligence-card h3 {
+    margin-top: 0;
+}
+
+.wzi-intelligence-value {
+    margin: 0.5rem 0;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.wzi-state-badge {
+    display: inline-block;
+    padding: 0.25rem 0.55rem;
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.wzi-state-badge[data-state="NORMAL"],
+.wzi-state-badge[data-state="HEALTHY"],
+.wzi-state-badge[data-state="IMPROVED"] {
+    opacity: 0.95;
+}
+
+.wzi-state-badge[data-state="WARNING"],
+.wzi-state-badge[data-state="ATTENTION"],
+.wzi-state-badge[data-state="STABLE"] {
+    opacity: 0.95;
+}
+
+.wzi-state-badge[data-state="CRITICAL"],
+.wzi-state-badge[data-state="DEGRADED"],
+.wzi-state-badge[data-state="UNKNOWN"] {
+    font-weight: 800;
+}
+
+.wzi-comparison {
+    margin-top: 0.65rem;
+    font-size: 0.9rem;
+}
+
+.wzi-health-score {
+    min-width: 145px;
+    padding: 0.8rem 1rem;
+    border: 1px solid currentColor;
+    border-radius: 0.65rem;
+    text-align: center;
+}
+
+.wzi-health-score-label {
+    display: block;
+    font-size: 0.75rem;
+}
+
+.wzi-health-score strong {
+    display: block;
+    margin: 0.25rem 0;
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.wzi-restart-intelligence {
+    margin-top: 1.25rem;
+}
+
+.wzi-restart-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.wzi-restart-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.wzi-restart-table th,
+.wzi-restart-table td {
+    padding: 0.65rem;
+    border-bottom: 1px solid rgba(127, 127, 127, 0.20);
+    text-align: left;
+}
+
+@media (max-width: 900px) {
+    .wzi-intelligence-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wzi-intelligence-section *,
+    .wzi-intelligence-section *::before,
+    .wzi-intelligence-section *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+        animation: none !important;
+    }
+}

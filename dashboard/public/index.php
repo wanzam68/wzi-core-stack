@@ -590,7 +590,106 @@ function e(string $value): string
             v1.5.0 Development
         </footer>
 
-    </main>
+
+<!-- =========================================================
+     WZI v1.6.0 Milestone 6C - Operational Intelligence
+     Temporary DEV-2.4D Candidate
+     ========================================================= -->
+<section id="wzi-operational-intelligence"
+         class="wzi-intelligence-section"
+         aria-labelledby="wzi-intelligence-title">
+
+    <div class="wzi-intelligence-heading">
+        <div>
+            <p class="wzi-intelligence-eyebrow">Operational Intelligence</p>
+            <h2 id="wzi-intelligence-title">Infrastructure Intelligence</h2>
+            <p>
+                Live and historical operational analysis derived from
+                certified WZI telemetry.
+            </p>
+        </div>
+
+        <div id="wzi-health-score"
+             class="wzi-health-score"
+             data-state="ATTENTION"
+             aria-live="polite">
+            <span class="wzi-health-score-label">Operational Score</span>
+            <strong id="wzi-health-score-value">--</strong>
+            <span id="wzi-health-score-state">ATTENTION</span>
+        </div>
+    </div>
+
+    <div id="wzi-intelligence-message"
+         class="wzi-intelligence-message"
+         role="status"
+         aria-live="polite">
+        Loading operational intelligence…
+    </div>
+
+    <div class="wzi-intelligence-grid"
+         aria-label="Host operational intelligence">
+
+        <article class="wzi-intelligence-card"
+                 data-metric="cpu">
+            <h3>CPU Utilization</h3>
+            <div class="wzi-intelligence-value"
+                 id="wzi-cpu-current">--</div>
+            <div class="wzi-state-badge"
+                 id="wzi-cpu-threshold"
+                 data-state="UNKNOWN">UNKNOWN</div>
+            <div class="wzi-comparison"
+                 id="wzi-cpu-comparison">Comparison unavailable</div>
+        </article>
+
+        <article class="wzi-intelligence-card"
+                 data-metric="memory">
+            <h3>Memory Utilization</h3>
+            <div class="wzi-intelligence-value"
+                 id="wzi-memory-current">--</div>
+            <div class="wzi-state-badge"
+                 id="wzi-memory-threshold"
+                 data-state="UNKNOWN">UNKNOWN</div>
+            <div class="wzi-comparison"
+                 id="wzi-memory-comparison">Comparison unavailable</div>
+        </article>
+
+        <article class="wzi-intelligence-card"
+                 data-metric="disk">
+            <h3>Disk Utilization</h3>
+            <div class="wzi-intelligence-value"
+                 id="wzi-disk-current">--</div>
+            <div class="wzi-state-badge"
+                 id="wzi-disk-threshold"
+                 data-state="UNKNOWN">UNKNOWN</div>
+            <div class="wzi-comparison"
+                 id="wzi-disk-comparison">Comparison unavailable</div>
+        </article>
+    </div>
+
+    <div class="wzi-restart-intelligence">
+        <h3>Service Restart Trend</h3>
+
+        <div class="wzi-restart-table-wrap">
+            <table class="wzi-restart-table">
+                <thead>
+                    <tr>
+                        <th scope="col">Service</th>
+                        <th scope="col">Current</th>
+                        <th scope="col">Historical</th>
+                        <th scope="col">Trend</th>
+                    </tr>
+                </thead>
+                <tbody id="wzi-restart-trend-body">
+                    <tr>
+                        <td colspan="4">Loading restart intelligence…</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+
+</main>
 
 </div>
 
