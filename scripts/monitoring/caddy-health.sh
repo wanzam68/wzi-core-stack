@@ -1,4 +1,72 @@
 #!/bin/bash
+
+# DEV-3.2D isolated candidate guard:
+# openssl certificate date output must be structurally valid and current
+# before a successful x509 date probe is accepted.
+openssl() {
+    local wzi_out
+    local wzi_rc
+    local wzi_args=" $* "
+    local wzi_not_after
+    local wzi_end_epoch
+    local wzi_now_epoch
+
+    wzi_out="$(command openssl "$@" 2>&1)"
+    wzi_rc=$?
+
+    if [ "$wzi_rc" -ne 0 ]; then
+        printf '%s\n' "$wzi_out" >&2
+        return "$wzi_rc"
+    fi
+
+    if [[ "$wzi_args" == *" x509 "* ]] &&
+       { [[ "$wzi_args" == *" -enddate "* ]] ||
+         [[ "$wzi_args" == *" -dates "* ]] ||
+         [[ "$wzi_args" == *" -checkend "* ]]; }; then
+
+        if [[ "$wzi_args" == *" -checkend "* ]]; then
+            # For -checkend, successful exit status is already the
+            # documented semantic result. Preserve it.
+            printf '%s\n' "$wzi_out"
+            return 0
+        fi
+
+        wzi_not_after="$(
+            printf '%s\n' "$wzi_out" |
+            sed -n 's/^notAfter=//p' |
+            head -n 1
+        )"
+
+        if [ -z "$wzi_not_after" ]; then
+            printf '%s\n' \
+                'CRITICAL: OpenSSL output missing valid notAfter certificate date.' \
+                >&2
+            return 67
+        fi
+
+        wzi_end_epoch="$(
+            date -u -d "$wzi_not_after" +%s 2>/dev/null
+        )" || {
+            printf '%s\n' \
+                'CRITICAL: OpenSSL certificate expiry date is not parseable.' \
+                >&2
+            return 68
+        }
+
+        wzi_now_epoch="$(date -u +%s)"
+
+        if [ "$wzi_end_epoch" -le "$wzi_now_epoch" ]; then
+            printf '%s\n' \
+                'CRITICAL: OpenSSL certificate expiry date is stale or expired.' \
+                >&2
+            return 69
+        fi
+    fi
+
+    printf '%s\n' "$wzi_out"
+    return 0
+}
+
 CONTAINER="wzi-caddy"
 HTTP_URL="http://n8n.wzisaas.com"
 HTTPS_URL="https://n8n.wzisaas.com"

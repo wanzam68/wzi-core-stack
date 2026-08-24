@@ -1,5 +1,80 @@
 #!/usr/bin/env bash
 
+# DEV-3.2D isolated candidate guard:
+# systemctl is-active / is-enabled results are validated semantically.
+# --quiet is deliberately removed from these read-only probes so that
+# the state can be checked rather than trusting exit zero alone.
+systemctl() {
+    local wzi_verb="${1:-}"
+
+    case "$wzi_verb" in
+        is-active|is-enabled)
+            shift
+
+            local -a wzi_args=()
+            local wzi_arg
+            local wzi_out
+            local wzi_rc
+            local wzi_state
+
+            for wzi_arg in "$@"; do
+                if [ "$wzi_arg" != "--quiet" ] &&
+                   [ "$wzi_arg" != "-q" ]; then
+                    wzi_args+=("$wzi_arg")
+                fi
+            done
+
+            wzi_out="$(
+                command systemctl \
+                    "$wzi_verb" \
+                    "${wzi_args[@]}" \
+                    2>&1
+            )"
+
+            wzi_rc=$?
+
+            if [ "$wzi_rc" -ne 0 ]; then
+                printf '%s\n' "$wzi_out" >&2
+                return "$wzi_rc"
+            fi
+
+            wzi_state="$(
+                printf '%s\n' "$wzi_out" |
+                head -n 1 |
+                tr -d '\r' |
+                sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+            )"
+
+            case "$wzi_verb" in
+                is-active)
+                    if [ "$wzi_state" != "active" ]; then
+                        printf '%s\n' \
+                            "CRITICAL: systemctl returned invalid active state: ${wzi_state:-EMPTY}" \
+                            >&2
+                        return 65
+                    fi
+                    ;;
+                is-enabled)
+                    if [ "$wzi_state" != "enabled" ]; then
+                        printf '%s\n' \
+                            "CRITICAL: systemctl returned invalid enabled state: ${wzi_state:-EMPTY}" \
+                            >&2
+                        return 66
+                    fi
+                    ;;
+            esac
+
+            printf '%s\n' "$wzi_state"
+            return 0
+            ;;
+
+        *)
+            command systemctl "$@"
+            ;;
+    esac
+}
+
+
 # ==========================================================
 # WZI Core Stack v1.5.0
 # Dashboard Health Monitor

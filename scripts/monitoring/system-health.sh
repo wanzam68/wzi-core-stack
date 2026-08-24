@@ -1,5 +1,47 @@
 #!/usr/bin/env bash
 
+# DEV-3.2D isolated candidate guard:
+# Successful docker command execution must not be treated as semantically
+# healthy when a required query returns no usable output.
+wzi_m7a_real_docker() {
+    command docker "$@"
+}
+
+docker() {
+    local wzi_out
+    local wzi_rc
+    local wzi_subcommand="${1:-}"
+
+    wzi_out="$(command docker "$@" 2>&1)"
+    wzi_rc=$?
+
+    if [ "$wzi_rc" -ne 0 ]; then
+        printf '%s\n' "$wzi_out" >&2
+        return "$wzi_rc"
+    fi
+
+    case "$wzi_subcommand" in
+        info|version|inspect)
+            if ! printf '%s' "$wzi_out" | grep -q '[^[:space:]]'; then
+                printf '%s\n' \
+                    'CRITICAL: Docker dependency returned empty semantic output.' \
+                    >&2
+                return 64
+            fi
+            ;;
+    esac
+
+    # Preserve legitimately empty stdout exactly. In particular,
+    # `docker ps --filter health=unhealthy` returning no rows is valid
+    # and must remain zero lines rather than becoming one blank line.
+    if [ -n "$wzi_out" ]; then
+        printf '%s\n' "$wzi_out"
+    fi
+
+    return 0
+}
+
+
 # ==========================================================
 # WZI Core Stack v1.3.0
 # Host Resource Health Monitor
