@@ -387,6 +387,51 @@ function e(string $value): string
                 </div>
             </div>
 
+            <div class="historical-operator-toolbar"
+                 aria-label="24 hour historical analytics controls">
+
+                <div class="historical-context">
+                    <span class="analytics-context-label">
+                        24H HISTORICAL ANALYTICS
+                    </span>
+
+                    <span id="historical-analytics-state"
+                          class="analytics-state analytics-state-loading"
+                          role="status"
+                          aria-live="polite">
+                        LOADING
+                    </span>
+                </div>
+
+                <div class="historical-header-actions">
+
+                    <label for="historical-service-filter"
+                           class="historical-control-label">
+                        Service
+                    </label>
+
+                    <select id="historical-service-filter"
+                            class="historical-service-filter"
+                            aria-label="Filter historical service series">
+                        <option value="all">All services</option>
+                    </select>
+
+                    <button type="button"
+                            id="historical-refresh-button"
+                            class="historical-refresh-button"
+                            aria-label="Refresh 24 hour historical analytics">
+                        Refresh
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div id="historical-analytics-message"
+                 class="historical-analytics-message"
+                 role="status"
+                 aria-live="polite"></div>
+
             <div class="historical-kpi-grid">
 
                 <article class="history-stat">

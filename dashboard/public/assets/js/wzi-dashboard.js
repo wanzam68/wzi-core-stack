@@ -1378,3 +1378,348 @@
         loadOperationalIntelligence();
     }
 })();
+
+/*
+ * Milestone 7B — Dashboard Analytics and Operator UX.
+ * Isolated candidate implementation.
+ */
+(() => {
+    'use strict';
+
+    const HISTORY_URL = '/api/history.php';
+
+    const STATE = Object.freeze({
+        LOADING: 'LOADING',
+        READY: 'READY',
+        EMPTY: 'EMPTY',
+        STALE: 'STALE',
+        UNAVAILABLE: 'UNAVAILABLE'
+    });
+
+    const STALE_AFTER_SECONDS = 300;
+
+    let lastHistory = null;
+
+    function stateNode() {
+        return document.getElementById('historical-analytics-state');
+    }
+
+    function messageNode() {
+        return document.getElementById('historical-analytics-message');
+    }
+
+    function refreshButton() {
+        return document.getElementById('historical-refresh-button');
+    }
+
+    function serviceFilter() {
+        return document.getElementById('historical-service-filter');
+    }
+
+    function setAnalyticsState(state, message = '') {
+        const node = stateNode();
+        const messageElement = messageNode();
+
+        if (node) {
+            node.textContent = state;
+            node.className =
+                `analytics-state analytics-state-${state.toLowerCase()}`;
+        }
+
+        if (messageElement) {
+            messageElement.textContent = message;
+        }
+    }
+
+    function semanticHistoryPayload(root) {
+        if (!root || typeof root !== 'object' || Array.isArray(root)) {
+            return null;
+        }
+
+        const data = root.data;
+
+        if (!data || typeof data !== 'object' || Array.isArray(data)) {
+            return null;
+        }
+
+        if (!data.range || typeof data.range !== 'object') {
+            return null;
+        }
+
+        if (data.range.name !== '24h') {
+            return null;
+        }
+
+        if (!data.summary || typeof data.summary !== 'object') {
+            return null;
+        }
+
+        if (!data.series || typeof data.series !== 'object') {
+            return null;
+        }
+
+        return data;
+    }
+
+    function countSeriesPoints(data) {
+        const series = data.series || {};
+
+        let total = 0;
+
+        for (const key of ['host', 'backup', 'ssl']) {
+            if (Array.isArray(series[key])) {
+                total += series[key].length;
+            }
+        }
+
+        if (
+            series.services &&
+            typeof series.services === 'object' &&
+            !Array.isArray(series.services)
+        ) {
+            for (const rows of Object.values(series.services)) {
+                if (Array.isArray(rows)) {
+                    total += rows.length;
+                }
+            }
+        }
+
+        return total;
+    }
+
+    function historyIsEmpty(data) {
+        return countSeriesPoints(data) === 0;
+    }
+
+    function historyIsStale(data) {
+        const generated = Date.parse(data.generated_at || '');
+
+        if (!Number.isFinite(generated)) {
+            return true;
+        }
+
+        return ((Date.now() - generated) / 1000) > STALE_AFTER_SECONDS;
+    }
+
+    function populateServiceFilter(data) {
+        const filter = serviceFilter();
+
+        if (!filter) {
+            return;
+        }
+
+        const previous = filter.value || 'all';
+
+        while (filter.options.length > 1) {
+            filter.remove(1);
+        }
+
+        const services = data?.series?.services;
+
+        if (
+            services &&
+            typeof services === 'object' &&
+            !Array.isArray(services)
+        ) {
+            Object.keys(services)
+                .sort()
+                .forEach((service) => {
+                    const option = document.createElement('option');
+
+                    option.value = service;
+                    option.textContent = service;
+
+                    filter.appendChild(option);
+                });
+        }
+
+        const stillExists = Array.from(filter.options)
+            .some((option) => option.value === previous);
+
+        filter.value = stillExists ? previous : 'all';
+    }
+
+    function selectedServiceHistory() {
+        const filter = serviceFilter();
+
+        if (!lastHistory || !filter) {
+            return null;
+        }
+
+        const selected = filter.value;
+
+        if (selected === 'all') {
+            return lastHistory.series?.services || {};
+        }
+
+        return {
+            [selected]:
+                lastHistory.series?.services?.[selected] || []
+        };
+    }
+
+    function applyServiceFilter() {
+        if (!lastHistory) {
+            return;
+        }
+
+        const filter = serviceFilter();
+        const selected = filter ? filter.value : 'all';
+
+        const detail = {
+            service: selected,
+            services: selectedServiceHistory(),
+            history: lastHistory
+        };
+
+        document.dispatchEvent(
+            new CustomEvent(
+                'wzi:historical-service-filter',
+                { detail }
+            )
+        );
+    }
+
+    async function loadHistoricalAnalytics() {
+        const button = refreshButton();
+
+        setAnalyticsState(
+            STATE.LOADING,
+            'Refreshing 24 hour historical analytics…'
+        );
+
+        if (button) {
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+        }
+
+        try {
+            const response = await fetch(
+                HISTORY_URL,
+                {
+                    cache: 'no-store',
+                    headers: {
+                        Accept: 'application/json'
+                    }
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(
+                    `Historical API HTTP ${response.status}`
+                );
+            }
+
+            const root = await response.json();
+            const data = semanticHistoryPayload(root);
+
+            if (!data) {
+                lastHistory = null;
+
+                setAnalyticsState(
+                    STATE.UNAVAILABLE,
+                    'Historical analytics payload is unavailable or malformed.'
+                );
+
+                return;
+            }
+
+            lastHistory = data;
+
+            populateServiceFilter(data);
+
+            if (historyIsEmpty(data)) {
+                setAnalyticsState(
+                    STATE.EMPTY,
+                    'No historical telemetry is available for the current 24 hour range.'
+                );
+
+                return;
+            }
+
+            if (historyIsStale(data)) {
+                setAnalyticsState(
+                    STATE.STALE,
+                    'Historical analytics are available but telemetry is stale.'
+                );
+
+                return;
+            }
+
+            setAnalyticsState(
+                STATE.READY,
+                '24 hour historical analytics are current.'
+            );
+
+            document.dispatchEvent(
+                new CustomEvent(
+                    'wzi:historical-refresh',
+                    {
+                        detail: {
+                            history: data
+                        }
+                    }
+                )
+            );
+
+            applyServiceFilter();
+
+        } catch (error) {
+            lastHistory = null;
+
+            console.error(
+                'Milestone 7B historical refresh failed:',
+                error
+            );
+
+            setAnalyticsState(
+                STATE.UNAVAILABLE,
+                'Historical analytics are currently unavailable.'
+            );
+
+        } finally {
+            if (button) {
+                button.disabled = false;
+                button.removeAttribute('aria-busy');
+            }
+        }
+    }
+
+    function initializeOperatorAnalytics() {
+        const button = refreshButton();
+        const filter = serviceFilter();
+
+        if (button) {
+            button.addEventListener(
+                'click',
+                loadHistoricalAnalytics
+            );
+        }
+
+        if (filter) {
+            filter.addEventListener(
+                'change',
+                applyServiceFilter
+            );
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener(
+            'DOMContentLoaded',
+            initializeOperatorAnalytics,
+            { once: true }
+        );
+    } else {
+        initializeOperatorAnalytics();
+    }
+
+    window.WZIHistoricalAnalytics = Object.freeze({
+        STATE,
+        semanticHistoryPayload,
+        historyIsEmpty,
+        historyIsStale,
+        load: loadHistoricalAnalytics,
+        applyServiceFilter
+    });
+})();
