@@ -663,8 +663,7 @@
             );
 
         try {
-            const response = await fetch(
-                "api/history.php",
+            const response = await fetch(historicalApiUrl(),
                 {
                     cache: "no-store"
                 }
@@ -1386,6 +1385,23 @@
 (() => {
     'use strict';
 
+    const WZI_ALLOWED_HISTORICAL_RANGES = Object.freeze(['24h', '7d', '30d']);
+
+    function getHistoricalRange() {
+        const control = document.getElementById('historical-range-filter');
+        const requested = control ? control.value : '24h';
+
+        return WZI_ALLOWED_HISTORICAL_RANGES.includes(requested)
+            ? requested
+            : '24h';
+    }
+
+    function historicalApiUrl() {
+        return `/api/history.php?range=${encodeURIComponent(getHistoricalRange())}`;
+    }
+
+
+
     const HISTORY_URL = '/api/history.php';
 
     const STATE = Object.freeze({
@@ -1446,7 +1462,7 @@
             return null;
         }
 
-        if (data.range.name !== '24h') {
+        if (!WZI_ALLOWED_HISTORICAL_RANGES.includes(data.range.name)) {
             return null;
         }
 
@@ -1722,4 +1738,30 @@
         load: loadHistoricalAnalytics,
         applyServiceFilter
     });
+
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const rangeControl = document.getElementById('historical-range-filter');
+
+        if (!rangeControl) {
+            return;
+        }
+
+        rangeControl.addEventListener('change', () => {
+            const range = getHistoricalRange();
+
+            document.dispatchEvent(
+                new CustomEvent('wzi:historical-range', {
+                    detail: { range }
+                })
+            );
+
+            document.dispatchEvent(
+                new CustomEvent('wzi:historical-refresh', {
+                    detail: { range }
+                })
+            );
+        });
+    });
+
 })();

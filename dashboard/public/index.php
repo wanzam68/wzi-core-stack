@@ -373,7 +373,7 @@ function e(string $value): string
             <div class="panel-header">
                 <div>
                     <span class="eyebrow">Historical Telemetry</span>
-                    <h2>24-Hour Infrastructure Trends</h2>
+                    <h2>Infrastructure Trends</h2>
                 </div>
 
                 <div class="trend-header-meta">
@@ -392,7 +392,7 @@ function e(string $value): string
 
                 <div class="historical-context">
                     <span class="analytics-context-label">
-                        24H HISTORICAL ANALYTICS
+                        HISTORICAL ANALYTICS
                     </span>
 
                     <span id="historical-analytics-state"
@@ -410,6 +410,14 @@ function e(string $value): string
                         Service
                     </label>
 
+                    <label class="historical-range-control" for="historical-range-filter">
+                        <span>Range</span>
+                        <select id="historical-range-filter" class="historical-range-filter" aria-label="Historical analytics range">
+                            <option value="24h" selected>24 Hours</option>
+                            <option value="7d">7 Days</option>
+                            <option value="30d">30 Days</option>
+                        </select>
+                    </label>
                     <select id="historical-service-filter"
                             class="historical-service-filter"
                             aria-label="Filter historical service series">

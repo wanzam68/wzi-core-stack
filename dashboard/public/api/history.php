@@ -1,83 +1,106 @@
 <?php
+
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
-header('Pragma: no-cache');
-header('X-Content-Type-Options: nosniff');
 
-$dataFile = '/var/www/dashboard-data/history.json';
+$allowedRanges = [
+    '24h' => 'history.json',
+    '7d'  => 'history-7d.json',
+    '30d' => 'history-30d.json',
+];
 
-function failResponse(
-    int $statusCode,
-    string $status,
-    string $message
-): never {
-    http_response_code($statusCode);
+$requestedRange = isset($_GET['range'])
+    ? strtolower(trim((string) $_GET['range']))
+    : '24h';
+
+if (!array_key_exists($requestedRange, $allowedRanges)) {
+    http_response_code(400);
 
     echo json_encode([
         'ok' => false,
-        'status' => $status,
-        'message' => $message
+        'error' => [
+            'code' => 'INVALID_HISTORY_RANGE',
+            'message' => 'Supported history ranges are 24h, 7d and 30d.',
+        ],
     ], JSON_UNESCAPED_SLASHES);
 
     exit;
 }
 
-if (!is_readable($dataFile)) {
-    failResponse(
-        503,
-        'UNAVAILABLE',
-        'Historical telemetry is unavailable.'
-    );
+$historyFile = dirname(__DIR__, 2)
+    . '/dashboard-data/'
+    . $allowedRanges[$requestedRange];
+
+if (!is_file($historyFile) || !is_readable($historyFile)) {
+    http_response_code(503);
+
+    echo json_encode([
+        'ok' => false,
+        'error' => [
+            'code' => 'HISTORY_NOT_AVAILABLE',
+            'message' => 'Historical telemetry is not available for the requested range.',
+            'range' => $requestedRange,
+        ],
+    ], JSON_UNESCAPED_SLASHES);
+
+    exit;
 }
 
-$contents = file_get_contents($dataFile);
+$raw = file_get_contents($historyFile);
 
-if ($contents === false) {
-    failResponse(
-        503,
-        'UNAVAILABLE',
-        'Historical telemetry could not be read.'
-    );
+if ($raw === false) {
+    http_response_code(503);
+
+    echo json_encode([
+        'ok' => false,
+        'error' => [
+            'code' => 'HISTORY_READ_FAILED',
+            'message' => 'Historical telemetry could not be read.',
+            'range' => $requestedRange,
+        ],
+    ], JSON_UNESCAPED_SLASHES);
+
+    exit;
 }
 
-$data = json_decode($contents, true);
+$data = json_decode($raw, true);
 
-if (!is_array($data)) {
-    failResponse(
-        503,
-        'INVALID',
-        'Historical telemetry is invalid.'
-    );
+if (!is_array($data) || json_last_error() !== JSON_ERROR_NONE) {
+    http_response_code(500);
+
+    echo json_encode([
+        'ok' => false,
+        'error' => [
+            'code' => 'INVALID_HISTORY_DOCUMENT',
+            'message' => 'Historical telemetry document is invalid.',
+            'range' => $requestedRange,
+        ],
+    ], JSON_UNESCAPED_SLASHES);
+
+    exit;
 }
 
-if (($data['schema_version'] ?? null) !== 1) {
-    failResponse(
-        503,
-        'INVALID_SCHEMA',
-        'Unsupported historical telemetry schema.'
-    );
-}
+$effectiveRange = $data['range']['name'] ?? null;
 
-$required = [
-    'generated_at',
-    'range',
-    'summary',
-    'series'
-];
+if ($effectiveRange !== $requestedRange) {
+    http_response_code(503);
 
-foreach ($required as $field) {
-    if (!array_key_exists($field, $data)) {
-        failResponse(
-            503,
-            'INVALID_CONTRACT',
-            'Historical telemetry contract is incomplete.'
-        );
-    }
+    echo json_encode([
+        'ok' => false,
+        'error' => [
+            'code' => 'HISTORY_RANGE_MISMATCH',
+            'message' => 'Historical telemetry does not match the requested range.',
+            'requested_range' => $requestedRange,
+            'effective_range' => $effectiveRange,
+        ],
+    ], JSON_UNESCAPED_SLASHES);
+
+    exit;
 }
 
 echo json_encode([
     'ok' => true,
-    'data' => $data
+    'data' => $data,
 ], JSON_UNESCAPED_SLASHES);

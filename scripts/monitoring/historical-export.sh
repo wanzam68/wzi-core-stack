@@ -14,27 +14,83 @@
 
 set -Eeuo pipefail
 
+
+
+# Milestone 7C bounded multi-range export orchestration.
+wzi_export_extended_ranges() {
+    local original_exit=$?
+
+    trap - EXIT
+
+    if [ "$original_exit" -ne 0 ]; then
+        exit "$original_exit"
+    fi
+
+    if [ "${WZI_HISTORY_MULTI_RANGE_CHILD:-0}" = "1" ]; then
+        exit 0
+    fi
+
+    local output_dir
+    output_dir="$(dirname "${OUTPUT_FILE}")"
+
+    WZI_HISTORY_MULTI_RANGE_CHILD=1 \
+    WZI_HISTORY_RANGE_NAME=7d \
+    WZI_HISTORY_RANGE_INTERVAL="7 days" \
+    WZI_HISTORY_BUCKET_SECONDS=1800 \
+    WZI_HISTORY_OUTPUT_FILE="${output_dir}/history-7d.json" \
+        bash "$0" || exit $?
+
+    WZI_HISTORY_MULTI_RANGE_CHILD=1 \
+    WZI_HISTORY_RANGE_NAME=30d \
+    WZI_HISTORY_RANGE_INTERVAL="30 days" \
+    WZI_HISTORY_BUCKET_SECONDS=3600 \
+    WZI_HISTORY_OUTPUT_FILE="${output_dir}/history-30d.json" \
+        bash "$0" || exit $?
+
+    exit 0
+}
+
+# DEV-3.4I-R3: final EXIT orchestration is installed after cleanup() is defined.
+
 PROJECT_ROOT="/opt/wzi/core-stack"
 
 POSTGRES_CONTAINER="wzi-postgres"
 DATABASE="wzi_saas"
 
 OUTPUT_DIR="${PROJECT_ROOT}/dashboard/storage/live"
-OUTPUT_FILE="${OUTPUT_DIR}/history.json"
-
+OUTPUT_FILE="${WZI_HISTORY_OUTPUT_FILE:-${OUTPUT_DIR}/history.json}"
 TEMP_SQL="$(mktemp)"
 TEMP_JSON="$(mktemp)"
 
-RANGE_NAME="24h"
-RANGE_INTERVAL="24 hours"
+RANGE_NAME="${WZI_HISTORY_RANGE_NAME:-24h}"
+RANGE_INTERVAL="${WZI_HISTORY_RANGE_INTERVAL:-24 hours}"
 BUCKET_INTERVAL="5 minutes"
-BUCKET_SECONDS=300
-
+BUCKET_SECONDS="${WZI_HISTORY_BUCKET_SECONDS:-300}"
 cleanup() {
     rm -f "$TEMP_SQL" "$TEMP_JSON"
 }
 
-trap cleanup EXIT
+wzi_finalize() {
+    local original_exit=$?
+
+    # Prevent recursive/re-entrant EXIT handling while finalization runs.
+    trap - EXIT
+
+    # Cleanup must always occur, regardless of success or failure.
+    cleanup
+
+    # A failed primary/child export must not launch extended ranges.
+    if [ "$original_exit" -ne 0 ]; then
+        exit "$original_exit"
+    fi
+
+    # On successful completion, preserve the existing bounded multi-range
+    # orchestration. Child runs terminate immediately because
+    # WZI_HISTORY_MULTI_RANGE_CHILD=1.
+    wzi_export_extended_ranges
+}
+
+trap wzi_finalize EXIT
 
 timestamp() {
     date -u '+%Y-%m-%dT%H:%M:%SZ'

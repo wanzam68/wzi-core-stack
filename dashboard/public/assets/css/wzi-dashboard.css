@@ -851,3 +851,35 @@ footer {
         transition: none !important;
     }
 }
+
+/* Milestone 7C — bounded historical range selection */
+.historical-range-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.historical-range-control > span {
+    font-size: 0.8125rem;
+    font-weight: 600;
+}
+
+.historical-range-filter {
+    min-height: 2.25rem;
+    padding: 0.4rem 2rem 0.4rem 0.65rem;
+    border-radius: 0.5rem;
+    font: inherit;
+}
+
+@media (max-width: 768px) {
+    .historical-range-control,
+    .historical-range-filter {
+        width: 100%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .historical-range-filter {
+        scroll-behavior: auto;
+    }
+}
