@@ -22,22 +22,55 @@ PostgreSQL
   -> history.php
   -> browser
 
-## Initial Range
+## Supported Ranges
 
-24 hours
+The dashboard supports the following historical telemetry
+ranges:
 
-## Initial Bucket Size
-
-300 seconds (5 minutes)
-
-## Supported Future Ranges
-
-- 1h
-- 6h
 - 24h
 - 7d
 - 30d
-- 90d
+
+The selected range is requested through:
+
+`GET /api/history.php?range=<range>`
+
+Only the supported values above are valid dashboard range
+selections.
+
+## Range Selection Semantics
+
+Historical consumers in the dashboard must use the active
+operator-selected range consistently.
+
+This applies to:
+
+- historical summary data
+- historical resource and infrastructure charts
+- Operational Intelligence historical comparisons
+- service restart trend comparisons
+- operator historical analytics refreshes
+
+Changing the historical range must cause subsequent historical
+requests to use the newly selected range.
+
+If the control is absent or an unsupported value is encountered,
+the browser falls back to `24h`.
+
+Historical telemetry failure remains fail-safe: live operational
+monitoring can continue even when historical comparison data is
+temporarily unavailable.
+
+## Bucket Sizes
+
+Current range-specific bucket sizes are:
+
+- 24h: 300 seconds (5 minutes)
+- 7d: 1800 seconds (30 minutes)
+- 30d: 3600 seconds (60 minutes)
+
+These bucket sizes describe the existing exported historical
+datasets and do not change the API schema.
 
 ## Top-Level Contract
 

@@ -1,5 +1,41 @@
 "use strict";
 
+const WZI_ALLOWED_HISTORICAL_RANGES =
+    Object.freeze(["24h", "7d", "30d"]);
+
+function getHistoricalRange() {
+    const control =
+        document.getElementById(
+            "historical-range-filter"
+        );
+
+    const requested =
+        control ? control.value : "24h";
+
+    return WZI_ALLOWED_HISTORICAL_RANGES.includes(
+        requested
+    )
+        ? requested
+        : "24h";
+}
+
+function historicalApiUrl() {
+    return "/api/history.php?range=" +
+        encodeURIComponent(
+            getHistoricalRange()
+        );
+}
+
+function historicalRangeLabel() {
+    const labels = {
+        "24h": "24 hour",
+        "7d": "7 day",
+        "30d": "30 day"
+    };
+
+    return labels[getHistoricalRange()] || "24 hour";
+}
+
 (function () {
     const clock = document.getElementById("utc-clock");
 
@@ -723,6 +759,11 @@
 
     loadHistoricalStatus();
 
+    document.addEventListener(
+        "wzi:historical-range",
+        loadHistoricalStatus
+    );
+
     const links = document.querySelectorAll(".sidebar a");
 
     links.forEach(function (link) {
@@ -745,7 +786,6 @@
     "use strict";
 
     const STATUS_URL = "/api/status.php";
-    const HISTORY_URL = "/api/history.php";
 
     const SERVICES = [
         "caddy",
@@ -1289,7 +1329,9 @@
 
             try {
                 historyData =
-                    await fetchJson(HISTORY_URL);
+                    await fetchJson(
+                        historicalApiUrl()
+                    );
             } catch (historyError) {
                 setText(
                     "wzi-intelligence-message",
@@ -1360,6 +1402,11 @@
         }
     }
 
+    document.addEventListener(
+        "wzi:historical-range",
+        loadOperationalIntelligence
+    );
+
     window.WZIOperationalIntelligence = {
         thresholdState,
         comparisonState,
@@ -1385,24 +1432,6 @@
 (() => {
     'use strict';
 
-    const WZI_ALLOWED_HISTORICAL_RANGES = Object.freeze(['24h', '7d', '30d']);
-
-    function getHistoricalRange() {
-        const control = document.getElementById('historical-range-filter');
-        const requested = control ? control.value : '24h';
-
-        return WZI_ALLOWED_HISTORICAL_RANGES.includes(requested)
-            ? requested
-            : '24h';
-    }
-
-    function historicalApiUrl() {
-        return `/api/history.php?range=${encodeURIComponent(getHistoricalRange())}`;
-    }
-
-
-
-    const HISTORY_URL = '/api/history.php';
 
     const STATE = Object.freeze({
         LOADING: 'LOADING',
@@ -1601,7 +1630,9 @@
 
         setAnalyticsState(
             STATE.LOADING,
-            'Refreshing 24 hour historical analytics…'
+            'Refreshing ' +
+            historicalRangeLabel() +
+            ' historical analytics…'
         );
 
         if (button) {
@@ -1611,7 +1642,7 @@
 
         try {
             const response = await fetch(
-                HISTORY_URL,
+                historicalApiUrl(),
                 {
                     cache: 'no-store',
                     headers: {
@@ -1647,7 +1678,9 @@
             if (historyIsEmpty(data)) {
                 setAnalyticsState(
                     STATE.EMPTY,
-                    'No historical telemetry is available for the current 24 hour range.'
+                    'No historical telemetry is available for the current ' +
+                    historicalRangeLabel() +
+                    ' range.'
                 );
 
                 return;
@@ -1664,7 +1697,8 @@
 
             setAnalyticsState(
                 STATE.READY,
-                '24 hour historical analytics are current.'
+                historicalRangeLabel() +
+                ' historical analytics are current.'
             );
 
             document.dispatchEvent(
@@ -1755,6 +1789,8 @@
                     detail: { range }
                 })
             );
+
+            loadHistoricalAnalytics();
 
             document.dispatchEvent(
                 new CustomEvent('wzi:historical-refresh', {

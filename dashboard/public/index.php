@@ -388,7 +388,7 @@ function e(string $value): string
             </div>
 
             <div class="historical-operator-toolbar"
-                 aria-label="24 hour historical analytics controls">
+                 aria-label="Historical analytics controls">
 
                 <div class="historical-context">
                     <span class="analytics-context-label">
@@ -427,7 +427,7 @@ function e(string $value): string
                     <button type="button"
                             id="historical-refresh-button"
                             class="historical-refresh-button"
-                            aria-label="Refresh 24 hour historical analytics">
+                            aria-label="Refresh historical analytics">
                         Refresh
                     </button>
 
